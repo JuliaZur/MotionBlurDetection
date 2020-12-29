@@ -7,7 +7,7 @@ DATA_DIR = './data'
 ORIGINAL_DIR = DATA_DIR + '/original'
 BLURRED_DIR = DATA_DIR + '/blurred'
 
-RANDOM_RATE = 0.5  # percent of blurred
+RANDOM_RATE = 0.5  # percent of blurred regions
 TARGET_SHAPE = (150, 150)
 TARGET_W = 30
 TARGET_H = 30
@@ -61,6 +61,38 @@ def blur_images():
     files = load_original_images()
     for file in files:
         blur_image(*file)
+
+
+class ImageRegion:
+    def __init__(self, img_path, row, col, label, width, height):
+        self.img_path = img_path
+        self.row = row
+        self.col = col
+        self.label = label
+        self.width = width
+        self.height = height
+
+    def get_crop(self):
+        img = cv2.imread(self.img_path)
+        left = self.row * self.width
+        top = self.col * self.height
+        right = (self.row + 1) * self.width
+        bottom = (self.col + 1) * self.height
+        crop = img[left:right, top:bottom]
+        return crop
+
+
+def get_regions_with_labels():
+    image_regions = []
+    for file in os.listdir(BLURRED_DIR):
+        if file.endswith(".jpg"):
+            img_path = os.path.join(BLURRED_DIR, file)
+            mask = np.loadtxt(img_path[:-3] + 'txt').reshape((BLUR_ROWS, BLUR_COLS))
+            for row in range(BLUR_ROWS):
+                for col in range(BLUR_COLS):
+                    img_region = ImageRegion(img_path, row, col, mask[row, col], TARGET_W, TARGET_H)
+                    image_regions.append(img_region)
+    return image_regions
 
 
 if __name__ == '__main__':
