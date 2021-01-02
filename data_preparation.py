@@ -74,12 +74,21 @@ class ImageRegion:
 
     def get_crop(self):
         img = cv2.imread(self.img_path)
+        if img.size != TARGET_SHAPE:
+            img = cv2.resize(img, TARGET_SHAPE)
         left = self.row * self.width
         top = self.col * self.height
         right = (self.row + 1) * self.width
         bottom = (self.col + 1) * self.height
         crop = img[left:right, top:bottom]
         return crop
+
+    def get_boundaries(self):
+        left = self.row * self.width
+        top = self.col * self.height
+        right = (self.row + 1) * self.width
+        bottom = (self.col + 1) * self.height
+        return left, top, right, bottom
 
 
 def get_regions_with_labels():
@@ -92,6 +101,15 @@ def get_regions_with_labels():
                 for col in range(BLUR_COLS):
                     img_region = ImageRegion(img_path, row, col, mask[row, col], TARGET_W, TARGET_H)
                     image_regions.append(img_region)
+    return image_regions
+
+
+def get_img_regions(img_path):
+    image_regions = []
+    for row in range(BLUR_ROWS):
+        for col in range(BLUR_COLS):
+            img_region = ImageRegion(img_path, row, col, None, TARGET_W, TARGET_H)
+            image_regions.append(img_region)
     return image_regions
 
 

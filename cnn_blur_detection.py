@@ -5,6 +5,9 @@ from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 from data_generator import get_regions_with_labels
 from data_generator import BlurRegionsDataGenerator
+from tensorflow import keras
+from data_preparation import BLUR_COLS, BLUR_ROWS, get_img_regions
+import numpy as np
 
 
 class MotionBlurDetectionCNN:
@@ -46,8 +49,8 @@ class MotionBlurDetectionCNN:
 
         Adam(lr=learning_rate)
         self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
-
         self.model.summary()
+        self.history = None
 
     def get_model(self):
         return self.model
@@ -55,18 +58,35 @@ class MotionBlurDetectionCNN:
     def train_model(self):
         hist = self.model.fit(
             self.training_generator,
+            epochs=self.epochs,
             validation_data=self.validation_generator,
             use_multiprocessing=True,
-            workers=6)
+            workers=6,
+            verbose=1
+        )
+        self.history = hist
         return hist
 
-    def predict(self, test_image):
-        return self.model.predict(test_image)
+    def predict(self, image_path):
+        mask = np.zeros((BLUR_ROWS, BLUR_COLS))
+        regions = get_img_regions(image_path)
+        crops = []
+        for region in regions:
+            crop = np.array([region.get_crop()])
+            prediciton = np.argmax(self.model.predict(crop, batch_size=1))
+            mask[region.row, region.col] = prediciton
+        return mask
 
     def evaluate(self, X_test, y_test):
         return self.model.evaluate(X_test, y_test)
+
+    def test(self):
+        return self.model.evaluate(self.validation_generator)
 
     def save_model(self, dir_path):
         file = open(dir_path + "motionblur.h5", 'a')
         self.model.save(dir_path + "motionblur.h5")
         file.close()
+
+    def load_model(self, filename):
+        self.model = keras.models.load_model(filename)
