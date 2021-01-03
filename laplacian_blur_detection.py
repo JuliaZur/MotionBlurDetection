@@ -27,3 +27,10 @@ class MotionBlurDetectionLaplacian:
         for i, predicted_label, _ in enumerate(predictions):
             evaluations.append(predicted_label == image_regions[i].label)
         return evaluations
+
+    def predict_single_crop(self, image_region: ImageRegion):
+        image = image_region.get_crop()
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.shape[1] > 3 else image
+        fm = self.variance_of_laplacian(image)
+        prediction = 1 if fm < self.threshold else 0
+        return prediction
