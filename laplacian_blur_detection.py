@@ -38,7 +38,8 @@ class MotionBlurDetectionLaplacian:
     def predict_single_image(self, image_path):
         predictions = []
         image_regions = get_img_regions(image_path)
-        for image in image_regions:
+        for image_region in image_regions:
+            image = image_region.get_crop()
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.shape[1] > 3 else image
             fm = self.variance_of_laplacian(image)
             predictions.append((1, fm)) if fm < self.threshold else predictions.append((0, fm))
