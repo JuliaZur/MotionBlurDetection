@@ -1,32 +1,29 @@
 import cv2
+from data_preparation import ImageRegion, get_regions_with_labels
 
 
 class MotionBlurDetectionLaplacian:
 
     def __init__(self, threshold=1000.):
         self.threshold = threshold
+        self.images_regions = get_regions_with_labels()
 
     @staticmethod
     def variance_of_laplacian(image):
         return cv2.Laplacian(image, cv2.CV_64F).var()
 
-    def predict(self, images_paths):
+    def predict(self):
         predictions = []
-        blur_level = []
-        for path in images_paths:
-            image = cv2.imread(path)
+        for img_region in self.images_regions:
+            image = img_region.get_crop()
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.shape[1] > 3 else image
             fm = self.variance_of_laplacian(image)
-            predictions.append(1) if fm < self.threshold else predictions.append(0)
-            blur_level.append(fm)
-        return predictions, blur_level
+            predictions.append((1, fm)) if fm < self.threshold else predictions.append((0, fm))
+        return predictions
 
-    def evaluate(self, images_paths, images_labels):
+    def evaluate(self, image_regions: [ImageRegion]):
         evaluations = []
-        predictions, _ = self.predict(images_paths)
-        for i in range(len(images_paths)):
-            if 1 in images_labels[i]:
-                evaluations.append(1) if predictions[i] == 1 else evaluations.append(0)
-            else:
-                evaluations.append(1) if predictions[i] == 0 else evaluations.append(0)
+        predictions = self.predict()
+        for i, predicted_label, _ in enumerate(predictions):
+            evaluations.append(predicted_label == image_regions[i].label)
         return evaluations
