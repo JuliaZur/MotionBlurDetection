@@ -77,8 +77,9 @@ class MotionBlurDetectionCNN:
             mask[region.row, region.col] = prediciton
         return mask
 
-    def evaluate(self, X_test, y_test):
-        return self.model.evaluate(X_test, y_test)
+    def predict_crops(self, X_test):
+        probs = self.model.predict(X_test, batch_size=len(X_test))
+        return probs, np.argmax(probs, axis=1)
 
     def test(self):
         return self.model.evaluate(self.validation_generator)

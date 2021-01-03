@@ -14,6 +14,21 @@ class BlurRegionsDataGenerator(Sequence):
         self.n_classes = n_classes
         self.regions = regions
 
+    def get_all(self):
+        size = len(self.img_regions)
+        X = np.empty((size, *self.dim))
+        y = np.empty((size), dtype=int)
+
+        for i, region in enumerate(self.img_regions[:size]):
+            crop = region.get_crop()
+
+            # Store sample
+            X[i,] = crop
+
+            # Store class
+            y[i] = region.label
+        return X, y
+
     def __len__(self):
         # Denotes the number of batches per epoch
         return int(np.floor(len(self.img_regions) / self.batch_size))
