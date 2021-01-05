@@ -2,9 +2,11 @@ from cnn_blur_detection import MotionBlurDetectionCNN
 from data_preparation import get_img_regions, TARGET_SHAPE, BLUR_COLS, BLUR_ROWS, TARGET_W, TARGET_H
 import cv2
 import matplotlib.pyplot as plt
-from sklearn.metrics import auc, precision_recall_curve, average_precision_score, roc_curve
+from sklearn.metrics import auc, precision_recall_curve, average_precision_score, roc_curve, accuracy_score, \
+    precision_score, recall_score, f1_score, classification_report
 import pandas as pd
 import seaborn as sns
+
 
 # USAGE
 # img_path = YOUR_PATH
@@ -90,3 +92,13 @@ def confusion_matrix(y_true, y_pred):
 
     sns.heatmap(confusion_matrix, annot=True)
     plt.show()
+
+
+def show_scores(y_true, y_pred, name):
+    print(f'''
+    {name} metrics:
+          Accuracy: \t{accuracy_score(y_true, y_pred)}
+          Precision: \t{precision_score(y_true, y_pred)}
+          Recall: \t\t{recall_score(y_true, y_pred)}
+          F1 score: \t{f1_score(y_true, y_pred)}
+          ''')
