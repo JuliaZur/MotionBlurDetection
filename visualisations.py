@@ -77,7 +77,12 @@ def roc_pr_rec_plots(y_true, y_predicted, y_probs):
     precision, recall, _ = precision_recall_curve(y_true, probs)
     ap = average_precision_score(y_true, y_predicted)
     ax_pr_fig.plot(recall, precision, label='AP = {:.2f}'.format(ap))
+    ax_pr_fig.plot([0, 1], [0.5, 0.5], 'r--')
+
+    plt.ylabel('Precision')
+    plt.xlabel('Recall')
     plt.xlim([-0.1, 1.1])
+    plt.ylim([0.4, 1.1])
 
     plt.show()
 
@@ -99,6 +104,6 @@ def show_scores(y_true, y_pred, name):
     {name} metrics:
           Accuracy: \t{accuracy_score(y_true, y_pred)}
           Precision: \t{precision_score(y_true, y_pred)}
-          Recall: \t\t{recall_score(y_true, y_pred)}
+          Recall: \t{recall_score(y_true, y_pred)}
           F1 score: \t{f1_score(y_true, y_pred)}
           ''')
