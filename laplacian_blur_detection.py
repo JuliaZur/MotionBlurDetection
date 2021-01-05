@@ -4,9 +4,9 @@ from data_preparation import ImageRegion, get_regions_with_labels, get_img_regio
 
 class MotionBlurDetectionLaplacian:
 
-    def __init__(self, threshold=1700.):
+    def __init__(self, threshold=1700., images_regions=get_regions_with_labels()):
         self.threshold = threshold
-        self.images_regions = get_regions_with_labels()
+        self.images_regions = images_regions
 
     @staticmethod
     def variance_of_laplacian(image):
