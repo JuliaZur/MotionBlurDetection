@@ -2,8 +2,13 @@ import os
 import numpy as np
 import cv2
 import random
+import glob
+import pandas as pd
+from tqdm import tqdm
+
 
 DATA_DIR = './data'
+EVAL_DIR = DATA_DIR + '/evaluation_data'
 ORIGINAL_DIR = DATA_DIR + '/original'
 BLURRED_DIR = DATA_DIR + '/blurred'
 
@@ -113,6 +118,62 @@ def get_img_regions(img_path):
     return image_regions
 
 
-if __name__ == '__main__':
-    print("Blurring..")
-    # blur_images()
+def get_evalutaion_img_regions():
+    sh1 = pd.read_excel(EVAL_DIR + '/BlurData.xls', sheet_name=0, header=None, names=['filename', 'label']).set_index(
+        'filename')
+    sh2 = pd.read_excel(EVAL_DIR + '/BlurData.xls', sheet_name=1, header=None, names=['filename', 'label']).set_index(
+        'filename')
+    sh3 = pd.read_excel(EVAL_DIR + '/BlurData.xls', sheet_name=2, header=None, names=['filename', 'label']).set_index(
+        'filename')
+    sheets = [sh1, sh2, sh3]
+    labels = pd.concat(sheets)
+    labels = labels.T.to_dict('list')
+
+    image_regions = []
+    not_found = 0
+    for filepath in glob.iglob(EVAL_DIR + '/**/**.png', recursive=True):
+        filename = filepath.split('/')[-1][:-4]
+        if filename in labels.keys():
+            label = labels[filename][0]
+            if label != 0:
+                label = 1
+            for row in range(BLUR_ROWS):
+                for col in range(BLUR_COLS):
+                    img_region = ImageRegion(filepath, row, col, label, TARGET_W, TARGET_H)
+                    image_regions.append(img_region)
+        else:
+            print(f'name: {filename} path: {filepath}')
+            not_found += 1
+    if not_found > 0:
+        print(f'Could not find labels for: {not_found} images')
+    return image_regions
+
+
+get_evalutaion_img_regions()
+
+
+def get_evaluation_data(n_imgs=-1):
+    regions = get_evalutaion_img_regions()
+    n_choices = n_imgs
+    if n_imgs == -1:
+        n_choices = len(regions)
+    img_regions = np.random.choice(regions, n_choices)
+    size = len(img_regions)
+    dim = (TARGET_W, TARGET_H, 3)
+    X = np.empty((size, *dim))
+    y = np.empty((size), dtype=int)
+
+    for i, region in enumerate(tqdm(img_regions)):
+        crop = region.get_crop()
+
+        # Store sample
+        X[i, ] = crop
+
+        # Store class
+        y[i] = region.label
+    return X, y
+
+# if __name__ == '__main__':
+# get_evalutaion_img_regions()
+# print("Blurring..")
+# blur_images()
